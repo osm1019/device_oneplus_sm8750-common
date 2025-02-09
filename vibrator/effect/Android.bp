@@ -7,9 +7,12 @@ cc_library_shared {
     cflags: Common_CFlags,
     srcs: [
         "effect.cpp",
+        "VibrationEffectLoader.cpp"
     ],
     shared_libs: [
+        "libbase",
         "libcutils",
+        "libjsoncpp",
         "libutils",
     ],
     export_include_dirs: ["."]
