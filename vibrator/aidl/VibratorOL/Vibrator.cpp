@@ -45,10 +45,6 @@
 #include "effect.h"
 #endif
 
-extern "C" {
-#include "libsoc_helper.h"
-}
-
 namespace aidl {
 namespace android {
 namespace hardware {
@@ -84,7 +80,6 @@ InputFFDevice::InputFFDevice()
     const char *INPUT_DIR = "/dev/input/";
     char name[NAME_BUF_SIZE];
     int fd, ret;
-    soc_info_v0_1_t soc;
 
     mVibraFd = INVALID_VALUE;
     mSupportGain = false;
@@ -143,18 +138,9 @@ InputFFDevice::InputFFDevice()
             if (test_bit(FF_GAIN, ffBitmask))
                 mSupportGain = true;
 
-            get_soc_info(&soc);
-            ALOGD("msm CPU SoC ID: %d\n", soc.msm_cpu);
-            switch (soc.msm_cpu) {
-            case MSM_CPU_KALAMA:
-            case MSM_CPU_PINEAPPLE:
-            case MSM_CPU_SUN:
-                mSupportExternalControl = true;
-                break;
-            default:
-                mSupportExternalControl = false;
-                break;
-            }
+            // Assume this soc is MSM_CPU_SUN.
+            mSupportExternalControl = true;
+
             break;
         }
 
