@@ -1,5 +1,5 @@
 cc_library_shared {
-    name: "vendor.qti.hardware.vibratorSel.impl",
+    name: "vendor.qti.hardware.vibratorSel.impl.oplus_sm8750",
     vendor: true,
     srcs: [
         "VibratorSelector.cpp",

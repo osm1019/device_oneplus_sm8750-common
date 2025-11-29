@@ -2,7 +2,7 @@ COMMON_CFLAGS = ["-Wall"]
 COMMON_CFLAGS += ["-Werror"]
 
 cc_library_shared {
-    name: "vendor.qti.hardware.vibratorCL.impl",
+    name: "vendor.qti.hardware.vibratorCL.impl.oplus_sm8750",
     cflags: COMMON_CFLAGS,
     vendor: true,
     srcs: ["Vibrator.cpp"],

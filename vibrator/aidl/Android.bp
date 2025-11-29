@@ -2,7 +2,7 @@ Common_CFlags = ["-Wall"]
 Common_CFlags += ["-Werror"]
 
 cc_library_shared {
-    name: "vendor.qti.hardware.vibrator.impl",
+    name: "vendor.qti.hardware.vibrator.impl.oplus_sm8750",
     vendor: true,
     cflags: Common_CFlags,
     srcs: [
@@ -12,13 +12,13 @@ cc_library_shared {
         "libcutils",
         "libutils",
         "liblog",
-        "libqtivibratoreffect",
+        "libqtivibratoreffect.oplus_sm8750",
         "libsoc_helper",
         "libbinder_ndk",
         "android.hardware.vibrator-V2-ndk",
-        "vendor.qti.hardware.vibratorOL.impl",
-        "vendor.qti.hardware.vibratorCL.impl",
-        "vendor.qti.hardware.vibratorSel.impl",
+        "vendor.qti.hardware.vibratorOL.impl.oplus_sm8750",
+        "vendor.qti.hardware.vibratorCL.impl.oplus_sm8750",
+        "vendor.qti.hardware.vibratorSel.impl.oplus_sm8750",
     ],
     export_include_dirs: ["include"],
     include_dirs: [
@@ -27,12 +27,12 @@ cc_library_shared {
 }
 
 cc_binary {
-    name: "vendor.qti.hardware.vibrator.service",
+    name: "vendor.qti.hardware.vibrator.service.oplus_sm8750",
     vendor: true,
     relative_install_path: "hw",
-    init_rc: ["vendor.qti.hardware.vibrator.service.rc"],
+    init_rc: ["vendor.qti.hardware.vibrator.service.oplus_sm8750.rc"],
     vintf_fragments: [
-        "vendor.qti.hardware.vibrator.service.xml",
+        "vendor.qti.hardware.vibrator.service.oplus_sm8750.xml",
     ],
     cflags: Common_CFlags,
     srcs: [
@@ -44,7 +44,7 @@ cc_binary {
         "libbase",
         "libbinder_ndk",
         "android.hardware.vibrator-V2-ndk",
-        "vendor.qti.hardware.vibrator.impl",
+        "vendor.qti.hardware.vibrator.impl.oplus_sm8750",
     ],
 }
 
@@ -55,7 +55,7 @@ prebuilt_etc {
 }
 
 cc_fuzz {
-    name: "vendor.qti.hardware.vibrator-service.aidl_fuzzer",
+    name: "vendor.qti.hardware.vibrator-service.aidl_fuzzer.oplus_sm8750",
     vendor: true,
 
     shared_libs: [
@@ -66,7 +66,7 @@ cc_fuzz {
         "libbinder",
         "libbinder_ndk",
         "android.hardware.vibrator-V2-ndk",
-        "vendor.qti.hardware.vibrator.impl",
+        "vendor.qti.hardware.vibrator.impl.oplus_sm8750",
     ],
 
     static_libs: [

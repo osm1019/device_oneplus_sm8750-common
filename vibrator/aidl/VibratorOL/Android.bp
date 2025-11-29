@@ -1,5 +1,5 @@
 cc_library_shared {
-    name: "vendor.qti.hardware.vibratorOL.impl",
+    name: "vendor.qti.hardware.vibratorOL.impl.oplus_sm8750",
     vendor: true,
     cflags: Common_CFlags,
     srcs: [
@@ -10,8 +10,8 @@ cc_library_shared {
         "libcutils",
         "libutils",
         "liblog",
-        "libqtivibratoreffect",
-        "libqtivibratoreffectoffload",
+        "libqtivibratoreffect.oplus_sm8750",
+        "libqtivibratoreffectoffload.oplus_sm8750",
         "libsoc_helper",
         "libbinder_ndk",
         "android.hardware.vibrator-V2-ndk",
