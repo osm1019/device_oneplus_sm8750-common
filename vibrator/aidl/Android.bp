@@ -14,6 +14,7 @@ cc_library_shared {
         "libutils",
         "liblog",
         "libqtivibratoreffect.oplus_sm8750",
+        "libsoc_helper",
         "libbinder_ndk",
         "android.hardware.vibrator-V2-ndk",
         "vendor.qti.hardware.vibratorOL.impl.oplus_sm8750",
