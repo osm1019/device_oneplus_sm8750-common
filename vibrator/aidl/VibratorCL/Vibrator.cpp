@@ -163,7 +163,7 @@ void VibratorCL::HapticsPCMRead() {
         MaxSupportedPCMeffect++;
         inFile.close();
     }
-exit:
+
     MaxSupportedPCMeffect = MaxSupportedPCMeffect - 1;
     ALOGE("HapticsPCMREAD maxSupportedPCMeffects %d", MaxSupportedPCMeffect);
 }
@@ -194,7 +194,7 @@ bool VibratorCL::IsPCMSupported(int effectID) {
  *                    kernel driver, and the rest two parameters are used for returning
  *                    back the real playing length from kernel driver.
  */
-int VibratorCL::play(int effectId, int strength, long *playLengthMs, uint32_t timeoutMs, bool isCompose, float amplitude) {
+int VibratorCL::play(int effectId, int strength, [[maybe_unused]] long *playLengthMs, uint32_t timeoutMs, bool isCompose, float amplitude) {
 
     int status = 0;
     pal_param_haptics_cnfg_t payload;
@@ -269,7 +269,7 @@ exit:
 }
 
 void VibratorCL::offEffect() {
-    int status = 0;
+    [[maybe_unused]] int status = 0;
 
     if (pal_stream_handle_) {
        HapticsWait();
@@ -385,8 +385,8 @@ int32_t HapticsSetParameters(uint32_t param_mode, pal_param_haptics_cnfg_t paylo
    return status;
 }
 
-int32_t VibratorCL::StreamHapticsCallback (uint64_t *stream_handle,
-                uint32_t event_id, uint32_t *event_data, uint32_t event_size, uint64_t cookie)
+int32_t VibratorCL::StreamHapticsCallback ([[maybe_unused]] uint64_t *stream_handle,
+                [[maybe_unused]] uint32_t event_id, uint32_t *event_data, [[maybe_unused]] uint32_t event_size, [[maybe_unused]] uint64_t cookie)
 {
     int32_t status = 0;
     ALOGE("event received from DSP %d", *event_data);
@@ -460,7 +460,6 @@ ndk::ScopedAStatus VibratorCL::off() {
     OffThread.detach();
     OffThrdCreated = true;
 
-exit:
     if (ret != 0)
         return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_SERVICE_SPECIFIC));
 
