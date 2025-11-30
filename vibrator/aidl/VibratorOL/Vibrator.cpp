@@ -186,8 +186,8 @@ int InputFFDevice::play(int effectId, uint32_t timeoutMs, long *playLengthMs) {
     if (!isPresent()) {
         if (playLengthMs != NULL)
             *playLengthMs = 0;
-            mtx.unlock();
-            return 0;
+        mtx.unlock();
+        return 0;
     }
 
     if (timeoutMs != 0) {
@@ -623,13 +623,13 @@ ndk::ScopedAStatus VibratorOL::getSupportedEffects(std::vector<Effect>* _aidl_re
     if (ledVib.mDetected)
         return ndk::ScopedAStatus::ok();
 
-        if (Offload.mEnabled == 1)
-            *_aidl_return = {Effect::CLICK, Effect::DOUBLE_CLICK, Effect::TICK, Effect::THUD,
-                             Effect::POP, Effect::HEAVY_CLICK, Effect::RINGTONE_12,
-                             Effect::RINGTONE_13, Effect::RINGTONE_14, Effect::RINGTONE_15};
-        else
-            *_aidl_return = {Effect::CLICK, Effect::DOUBLE_CLICK, Effect::TICK, Effect::THUD,
-                             Effect::POP, Effect::HEAVY_CLICK};
+    if (Offload.mEnabled == 1)
+        *_aidl_return = {Effect::CLICK, Effect::DOUBLE_CLICK, Effect::TICK, Effect::THUD,
+                         Effect::POP, Effect::HEAVY_CLICK, Effect::RINGTONE_12,
+                         Effect::RINGTONE_13, Effect::RINGTONE_14, Effect::RINGTONE_15};
+    else
+        *_aidl_return = {Effect::CLICK, Effect::DOUBLE_CLICK, Effect::TICK, Effect::THUD,
+                         Effect::POP, Effect::HEAVY_CLICK};
 
     return ndk::ScopedAStatus::ok();
 }
