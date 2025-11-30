@@ -504,10 +504,11 @@ PRODUCT_COPY_FILES += \
 # Vibrator
 ifneq ($(TARGET_IS_TABLET),true)
 PRODUCT_PACKAGES += \
-    vendor.qti.hardware.vibrator.service.oplus
+    vendor.qti.hardware.vibrator.service.oplus_sm8750 \
+    HapticsPolicy.xml
 
 PRODUCT_COPY_FILES += \
-    vendor/qcom/opensource/vibrator/excluded-input-devices.xml:$(TARGET_COPY_OUT_VENDOR)/etc/excluded-input-devices.xml
+    $(LOCAL_PATH)/vibrator/excluded-input-devices.xml:$(TARGET_COPY_OUT_VENDOR)/etc/excluded-input-devices.xml
 endif
 
 # VINTF
