@@ -483,7 +483,7 @@ ndk::ScopedAStatus VibratorCL::on(int32_t timeoutMs,
         return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_SERVICE_SPECIFIC));
 
     if (callback != nullptr) {
-        std::thread([=] {
+        std::thread([=, this] {
             ALOGD("Starting ON on another thread");
             HapticsWaitTillWaveformComp();
             ALOGD("Notifying on complete");
@@ -521,7 +521,7 @@ ndk::ScopedAStatus VibratorCL::perform(Effect effect, EffectStrength es,
         return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_SERVICE_SPECIFIC));
 
     if (callback != nullptr) {
-        std::thread([=] {
+        std::thread([=, this] {
             ALOGD("Starting perform on another thread");
             HapticsWaitTillWaveformComp();
             ALOGD("Notifying perform complete");
