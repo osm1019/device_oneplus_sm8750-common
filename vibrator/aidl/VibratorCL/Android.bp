@@ -6,8 +6,10 @@ cc_library_shared {
     cflags: COMMON_CFLAGS,
     vendor: true,
     srcs: ["Vibrator.cpp"],
-    include_dirs: ["vendor/qcom/opensource/pal/inc",
-                   "vendor/qcom/proprietary/args/"],
+    include_dirs: [
+        "hardware/qcom-caf/sm8750/audio/pal/inc/",
+        "hardware/qcom-caf/sm8750/audio/graphservices/spf/api/modules",
+    ],
     header_libs: [
         "libspf-headers",
         "libarosal_headers",
