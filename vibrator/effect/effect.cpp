@@ -112,15 +112,11 @@ static const struct effect_stream primitives[] = {
     },
 };
 
-namespace {
-VibrationEffectLoader loader;
-};  // anonymous namespace
-
 const struct effect_stream *get_effect_stream(uint32_t effect_id)
 {
     int i;
 
-    auto ret = loader.getEffectStream(effect_id);
+    auto ret = VibrationEffectLoader::getInstance().getEffectStream(effect_id);
     if (ret) return ret;
 
     if ((effect_id & 0x8000) != 0) {
