@@ -70,6 +70,21 @@ const int8_t* LoadEffectDataFromFile(const std::string& path, uint32_t& length) 
 }
 };  // anonymous namespace
 
+VibrationEffectLoader &VibrationEffectLoader::getInstance() {
+    static VibrationEffectLoader instance;
+    return instance;
+}
+
+effect_stream* VibrationEffectLoader::getEffectStream(uint32_t effect_id) {
+    auto entry = effect_map_.find(effect_id);
+    if (entry != effect_map_.end()) {
+        LOG(WARNING) << __func__ << ": Found an effect for id: " << effect_id;
+        return &entry->second;
+    }
+    LOG(WARNING) << __func__ << ": Cannot find an effect for id: " << effect_id;
+    return nullptr;
+}
+
 VibrationEffectLoader::VibrationEffectLoader() {
     std::ifstream config_stream(kConfigPath);
     if (!config_stream) {
@@ -87,14 +102,6 @@ VibrationEffectLoader::VibrationEffectLoader() {
 
 VibrationEffectLoader::~VibrationEffectLoader() {
     std::for_each(effect_map_.begin(), effect_map_.end(), [](auto&& v) { delete[] v.second.data; });
-}
-
-effect_stream* VibrationEffectLoader::getEffectStream(uint32_t effect_id) {
-    auto entry = effect_map_.find(effect_id);
-    if (entry != effect_map_.end()) {
-        return &entry->second;
-    }
-    return nullptr;
 }
 
 Json::Value VibrationEffectLoader::parseEffectJson(std::ifstream& config_stream) {
@@ -145,6 +152,9 @@ void VibrationEffectLoader::loadEffects(Json::Value&& effect_nodes) {
         if (!data) {
             continue;
         }
+
+        LOG(INFO) << "Loaded an effect. id: " << effect_id << ", length: " << length
+            << ", play_rate_hz: " << play_rate_hz;
 
         effect_map_.emplace(effect_id, effect_stream{effect_id, length, play_rate_hz, data});
     }

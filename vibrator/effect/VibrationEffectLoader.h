@@ -13,11 +13,17 @@
 
 class VibrationEffectLoader {
   public:
+    static VibrationEffectLoader &getInstance();
+
+    effect_stream* getEffectStream(uint32_t effect_id);
+  private:
     VibrationEffectLoader();
     ~VibrationEffectLoader();
-    effect_stream* getEffectStream(uint32_t effect_id);
 
-  private:
+    // Disallow copy constructor and copy assignment operator for a singleton.
+    VibrationEffectLoader(const VibrationEffectLoader &) = delete;
+    VibrationEffectLoader &operator=(const VibrationEffectLoader &) = delete;
+
     Json::Value parseEffectJson(std::ifstream& config_stream);
     void loadEffects(Json::Value&& effect_nodes);
 
