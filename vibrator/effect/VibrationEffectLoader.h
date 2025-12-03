@@ -27,5 +27,7 @@ class VibrationEffectLoader {
     Json::Value parseEffectJson(std::ifstream& config_stream);
     void loadEffects(Json::Value&& effect_nodes);
 
+    uint32_t translatePrimitiveToEffect(uint32_t primitive_id);
+
     std::unordered_map<uint32_t, effect_stream> effect_map_;
 };
