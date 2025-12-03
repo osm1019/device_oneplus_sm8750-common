@@ -8,6 +8,7 @@
 
 #include "VibrationEffectLoader.h"
 
+#include <aidl/android/hardware/vibrator/CompositePrimitive.h>
 #include <android-base/logging.h>
 
 #include <fstream>
@@ -76,9 +77,13 @@ VibrationEffectLoader &VibrationEffectLoader::getInstance() {
 }
 
 effect_stream* VibrationEffectLoader::getEffectStream(uint32_t effect_id) {
+    if ((effect_id & 0x8000) != 0) {
+        effect_id = translatePrimitiveToEffect(effect_id & 0x7fff);
+    }
+
     auto entry = effect_map_.find(effect_id);
     if (entry != effect_map_.end()) {
-        LOG(WARNING) << __func__ << ": Found an effect for id: " << effect_id;
+        LOG(DEBUG) << __func__ << ": Found an effect for id: " << effect_id;
         return &entry->second;
     }
     LOG(WARNING) << __func__ << ": Cannot find an effect for id: " << effect_id;
@@ -158,4 +163,27 @@ void VibrationEffectLoader::loadEffects(Json::Value&& effect_nodes) {
 
         effect_map_.emplace(effect_id, effect_stream{effect_id, length, play_rate_hz, data});
     }
+}
+
+uint32_t VibrationEffectLoader::translatePrimitiveToEffect(uint32_t primitive_id) {
+    using namespace aidl::android::hardware::vibrator;
+    const auto prim = static_cast<CompositePrimitive>(primitive_id);
+
+    LOG(DEBUG) << __func__ << ": trying to translate a composite primitive: " << primitive_id;
+
+    using enum CompositePrimitive;
+    switch (prim) {
+        case CLICK:
+            return 0;
+        case THUD:
+            return 3;
+        case LIGHT_TICK:
+            return 7;
+        case LOW_TICK:
+            return 305;
+        default:
+            break;
+    }
+
+    return primitive_id;
 }
