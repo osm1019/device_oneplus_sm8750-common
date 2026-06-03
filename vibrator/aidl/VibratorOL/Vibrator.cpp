@@ -39,6 +39,7 @@
 #include <sys/epoll.h>
 #include <sys/poll.h>
 #include <thread>
+#include <algorithm>
 
 #include "Vibrator.h"
 #ifdef USE_EFFECT_STREAM
@@ -345,6 +346,73 @@ int InputFFDevice::playPrimitive(int primitiveId, float amplitude, long *playLen
     return ret;
 }
 
+int InputFFDevice::playPwle(uint8_t *samples, size_t numSamples, uint32_t playRateHz, long *playLengthMs) {
+    struct ff_effect effect;
+    struct input_event play;
+    int ret;
+
+    struct {
+        uint32_t idx;
+        uint32_t length;
+        uint32_t play_rate_hz;
+        uint8_t *data;
+    } fifo = {
+        .idx = 0,
+        .length = (uint32_t)numSamples,
+        .play_rate_hz = playRateHz,
+        .data = samples,
+    };
+
+    mtx.lock();
+    if (!isPresent()) {
+        mtx.unlock();
+        return 0;
+    }
+
+    if (mCurrAppId != INVALID_VALUE) {
+        ret = TEMP_FAILURE_RETRY(ioctl(mVibraFd, EVIOCRMFF, mCurrAppId));
+        if (ret == -1)
+            ALOGE("ioctl EVIOCRMFF failed, errno = %d", -errno);
+        mCurrAppId = INVALID_VALUE;
+    }
+
+    memset(&effect, 0, sizeof(effect));
+    effect.type = FF_PERIODIC;
+    effect.u.periodic.waveform = FF_CUSTOM;
+    effect.u.periodic.magnitude = mCurrMagnitude;
+    effect.u.periodic.custom_data = (int16_t *)&fifo;
+    effect.u.periodic.custom_len = sizeof(fifo);
+    effect.id = mCurrAppId;
+    effect.replay.delay = 0;
+
+    ret = TEMP_FAILURE_RETRY(ioctl(mVibraFd, EVIOCSFF, &effect));
+    if (ret == -1) {
+        ALOGE("playPwle: EVIOCSFF failed, errno = %d", -errno);
+        mCurrAppId = INVALID_VALUE;
+        mtx.unlock();
+        return ret;
+    }
+
+    mCurrAppId = effect.id;
+    if (playLengthMs)
+        *playLengthMs = numSamples * 1000 / playRateHz;
+
+    play.value = 1;
+    play.type = EV_FF;
+    play.code = mCurrAppId;
+    play.time.tv_sec = 0;
+    play.time.tv_usec = 0;
+    ret = TEMP_FAILURE_RETRY(write(mVibraFd, &play, sizeof(play)));
+    if (ret == -1) {
+        ALOGE("playPwle: write failed, errno = %d", -errno);
+        ioctl(mVibraFd, EVIOCRMFF, mCurrAppId);
+        mCurrAppId = INVALID_VALUE;
+    }
+
+    mtx.unlock();
+    return ret;
+}
+
 LedVibratorDevice::LedVibratorDevice() {
     char devicename[PATH_MAX];
     int fd;
@@ -526,6 +594,8 @@ ndk::ScopedAStatus VibratorOL::getCapabilities(int32_t* _aidl_return) {
     if (ff.mSupportExternalControl)
         *_aidl_return |= IVibrator::CAP_EXTERNAL_CONTROL;
 
+    *_aidl_return |= IVibrator::CAP_COMPOSE_PWLE_EFFECTS;
+
     ALOGD("QTI Vibrator reporting capabilities: %d", *_aidl_return);
     return ndk::ScopedAStatus::ok();
 }
@@ -602,7 +672,19 @@ ndk::ScopedAStatus VibratorOL::perform(Effect effect, EffectStrength es, const s
     if (es != EffectStrength::LIGHT && es != EffectStrength::MEDIUM && es != EffectStrength::STRONG)
         return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_UNSUPPORTED_OPERATION));
 
-    ret = ff.playEffect((static_cast<int>(effect)), es, &playLengthMs);
+    // Map AOSP Effect IDs to ColorOS effect IDs
+    int effectId;
+    switch (effect) {
+        case Effect::CLICK:        effectId = 2;   break;  // heavy: single tap
+        case Effect::DOUBLE_CLICK: effectId = 315; break;  // screenlock: two strong pulses
+        case Effect::TICK:         effectId = 2;   break;  // heavy: back gesture, scroll feedback
+        case Effect::THUD:         effectId = 1;   break;  // heavy: strong single pulse
+        case Effect::POP:          effectId = 7;   break;  // light: short tap
+        case Effect::HEAVY_CLICK:  effectId = 6;   break;  // heavy: long press
+        default:                   effectId = static_cast<int>(effect); break;
+    }
+
+    ret = ff.playEffect(effectId, es, &playLengthMs);
     if (ret != 0)
         return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_SERVICE_SPECIFIC));
 
@@ -812,6 +894,9 @@ void VibratorOL::composePlayThread(VibratorOL *vibrator,
             }
         }
 
+        if (e.primitive == CompositePrimitive::NOOP)
+            continue;
+
         vibrator->ff.playPrimitive((static_cast<int>(e.primitive)), e.scale, &playLengthMs);
         nfd = epoll_wait(vibrator->epollfd, &events, 1, playLengthMs);
         if (nfd == -1 && (errno != EINTR)) {
@@ -960,21 +1045,95 @@ ndk::ScopedAStatus VibratorOL::getBandwidthAmplitudeMap(std::vector<float> *_aid
     return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_UNSUPPORTED_OPERATION));
 }
 
-ndk::ScopedAStatus VibratorOL::getPwlePrimitiveDurationMax(int32_t *durationMs __unused) {
-    return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_UNSUPPORTED_OPERATION));
+ndk::ScopedAStatus VibratorOL::getPwlePrimitiveDurationMax(int32_t *durationMs) {
+    *durationMs = 16383;
+    return ndk::ScopedAStatus::ok();
 }
 
-ndk::ScopedAStatus VibratorOL::getPwleCompositionSizeMax(int32_t *maxSize __unused) {
-    return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_UNSUPPORTED_OPERATION));
+ndk::ScopedAStatus VibratorOL::getPwleCompositionSizeMax(int32_t *maxSize) {
+    *maxSize = 127;
+    return ndk::ScopedAStatus::ok();
 }
 
-ndk::ScopedAStatus VibratorOL::getSupportedBraking(std::vector<Braking> *supported __unused) {
-    return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_UNSUPPORTED_OPERATION));
+ndk::ScopedAStatus VibratorOL::getSupportedBraking(std::vector<Braking> *supported) {
+    *supported = {Braking::NONE};
+    return ndk::ScopedAStatus::ok();
 }
 
-ndk::ScopedAStatus VibratorOL::composePwle(const std::vector<PrimitivePwle> &composite __unused,
-                           const std::shared_ptr<IVibratorCallback> &callback __unused) {
-    return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_UNSUPPORTED_OPERATION));
+ndk::ScopedAStatus VibratorOL::composePwle(const std::vector<PrimitivePwle> &composite,
+                           const std::shared_ptr<IVibratorCallback> &callback) {
+    static constexpr int PWLE_PLAY_RATE_HZ = 8000;
+    static constexpr size_t PWLE_MAX_SAMPLES = 16383 * PWLE_PLAY_RATE_HZ / 1000;
+
+    if (composite.empty())
+        return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_ARGUMENT);
+
+    if (!ff.isPresent())
+        return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_UNSUPPORTED_OPERATION));
+
+    // Calculate total duration and validate
+    int totalDurationMs = 0;
+    for (auto& segment : composite) {
+        if (segment.getTag() == PrimitivePwle::active) {
+            auto& active = segment.get<PrimitivePwle::active>();
+            if (active.duration <= 0)
+                return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_ARGUMENT);
+            totalDurationMs += active.duration;
+        } else if (segment.getTag() == PrimitivePwle::braking) {
+            auto& braking = segment.get<PrimitivePwle::braking>();
+            if (braking.duration > 0)
+                totalDurationMs += braking.duration;
+        }
+    }
+
+    size_t totalSamples = (size_t)totalDurationMs * PWLE_PLAY_RATE_HZ / 1000;
+    if (totalSamples == 0 || totalSamples > PWLE_MAX_SAMPLES)
+        return ndk::ScopedAStatus::fromExceptionCode(EX_ILLEGAL_ARGUMENT);
+
+    // Generate amplitude envelope samples
+    auto* samples = new(std::nothrow) uint8_t[totalSamples];
+    if (!samples)
+        return ndk::ScopedAStatus::fromExceptionCode(EX_SERVICE_SPECIFIC);
+
+    size_t offset = 0;
+    for (auto& segment : composite) {
+        if (segment.getTag() == PrimitivePwle::active) {
+            auto& active = segment.get<PrimitivePwle::active>();
+            size_t numSamples = (size_t)active.duration * PWLE_PLAY_RATE_HZ / 1000;
+            float startAmp = active.startAmplitude;
+            float endAmp = active.endAmplitude;
+            for (size_t i = 0; i < numSamples && offset < totalSamples; i++, offset++) {
+                float t = (numSamples > 1) ? (float)i / (numSamples - 1) : 1.0f;
+                float amp = startAmp + t * (endAmp - startAmp);
+                amp = std::clamp(amp, 0.0f, 1.0f);
+                samples[offset] = (uint8_t)(amp * 255.0f);
+            }
+        } else if (segment.getTag() == PrimitivePwle::braking) {
+            auto& braking = segment.get<PrimitivePwle::braking>();
+            size_t numSamples = (size_t)braking.duration * PWLE_PLAY_RATE_HZ / 1000;
+            for (size_t i = 0; i < numSamples && offset < totalSamples; i++, offset++)
+                samples[offset] = 0;
+        }
+    }
+
+    totalSamples = offset;
+
+    long playLengthMs = 0;
+    int ret = ff.playPwle(samples, totalSamples, PWLE_PLAY_RATE_HZ, &playLengthMs);
+
+    delete[] samples;
+
+    if (ret < 0)
+        return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_SERVICE_SPECIFIC));
+
+    if (callback) {
+        std::thread([=] {
+            usleep(playLengthMs * 1000);
+            callback->onComplete();
+        }).detach();
+    }
+
+    return ndk::ScopedAStatus::ok();
 }
 
 }  // namespace vibrator

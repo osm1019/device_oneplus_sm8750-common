@@ -71,6 +71,7 @@ public:
     InputFFDevice();
     int playEffect(int effectId, EffectStrength es, long *playLengthMs);
     int playPrimitive(int primitiveId, float amplitude, long *playLengthMs);
+    int playPwle(uint8_t *samples, size_t numSamples, uint32_t playRateHz, long *playLengthMs);
     int on(int32_t timeoutMs);
     int off();
     int setAmplitude(uint8_t amplitude);
