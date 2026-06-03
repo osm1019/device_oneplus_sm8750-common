@@ -173,14 +173,24 @@ uint32_t VibrationEffectLoader::translatePrimitiveToEffect(uint32_t primitive_id
 
     using enum CompositePrimitive;
     switch (prim) {
+        case NOOP:
+            return 0xFFFF;  // no matching bin, playPrimitive will be skipped
         case CLICK:
-            return 0;
+            return 2;       // heavy: crisp single tap
         case THUD:
-            return 3;
+            return 1;       // heavy: single strong pulse (avoid motor noise from effect_3)
+        case SPIN:
+            return 3;       // TODO: map to clearmem (gear) when confirmed
+        case QUICK_RISE:
+            return 6;       // heavy: sharp attack, fast rise
+        case SLOW_RISE:
+            return 6;       // TODO: map to fpadd (wave) when confirmed
+        case QUICK_FALL:
+            return 7;       // light: short duration, natural decay
         case LIGHT_TICK:
-            return 7;
+            return 7;       // light: subtle tick
         case LOW_TICK:
-            return 305;
+            return 305;     // light: low-key release feedback
         default:
             break;
     }

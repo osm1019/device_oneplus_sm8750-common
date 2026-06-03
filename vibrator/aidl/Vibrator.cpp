@@ -243,6 +243,23 @@ public:
         VibratorSelectionLock.unlock();
         return status;
     }
+
+    ndk::ScopedAStatus getPwlePrimitiveDurationMax(int32_t* durationMs) {
+        return mVibratorOL.getPwlePrimitiveDurationMax(durationMs);
+    }
+
+    ndk::ScopedAStatus getPwleCompositionSizeMax(int32_t* maxSize) {
+        return mVibratorOL.getPwleCompositionSizeMax(maxSize);
+    }
+
+    ndk::ScopedAStatus getSupportedBraking(std::vector<Braking>* supported) {
+        return mVibratorOL.getSupportedBraking(supported);
+    }
+
+    ndk::ScopedAStatus composePwle(const std::vector<PrimitivePwle>& composite,
+                    const std::shared_ptr<IVibratorCallback>& callback) {
+        return mVibratorOL.composePwle(composite, callback);
+    }
 };
 
 
@@ -341,21 +358,21 @@ ndk::ScopedAStatus Vibrator::getBandwidthAmplitudeMap(std::vector<float>* _aidl_
     return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_UNSUPPORTED_OPERATION));
 }
 
-ndk::ScopedAStatus Vibrator::getPwlePrimitiveDurationMax(int32_t* durationMs __unused) {
-    return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_UNSUPPORTED_OPERATION));
+ndk::ScopedAStatus Vibrator::getPwlePrimitiveDurationMax(int32_t* durationMs) {
+    return pImpl->getPwlePrimitiveDurationMax(durationMs);
 }
 
-ndk::ScopedAStatus Vibrator::getPwleCompositionSizeMax(int32_t* maxSize __unused) {
-    return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_UNSUPPORTED_OPERATION));
+ndk::ScopedAStatus Vibrator::getPwleCompositionSizeMax(int32_t* maxSize) {
+    return pImpl->getPwleCompositionSizeMax(maxSize);
 }
 
-ndk::ScopedAStatus Vibrator::getSupportedBraking(std::vector<Braking>* supported __unused) {
-    return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_UNSUPPORTED_OPERATION));
+ndk::ScopedAStatus Vibrator::getSupportedBraking(std::vector<Braking>* supported) {
+    return pImpl->getSupportedBraking(supported);
 }
 
-ndk::ScopedAStatus Vibrator::composePwle(const std::vector<PrimitivePwle>& composite __unused,
-    const std::shared_ptr<IVibratorCallback>& callback __unused) {
-    return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_UNSUPPORTED_OPERATION));
+ndk::ScopedAStatus Vibrator::composePwle(const std::vector<PrimitivePwle>& composite,
+    const std::shared_ptr<IVibratorCallback>& callback) {
+    return pImpl->composePwle(composite, callback);
 }
 
 }  // namespace vibrator
