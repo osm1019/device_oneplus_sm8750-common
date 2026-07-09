@@ -8,7 +8,6 @@ cc_library_shared {
     name: "sensors.qsh_wrapper",
     defaults: ["hidl_defaults"],
     srcs: [
-        "AlsCorrection.cpp",
         "SensorsSubHal.cpp",
     ],
     shared_libs: [
@@ -16,12 +15,8 @@ cc_library_shared {
         "android.hardware.sensors@2.0-ScopedWakelock",
         "android.hardware.sensors@2.1",
         "libbase",
-        "libbinder",
-        "libbinder_ndk",
         "libhidlbase",
-        "liblog",
         "libutils",
-        "vendor.lineage.oplus_als-V1-ndk",
     ],
     header_libs: [
         "android.hardware.sensors@2.X-multihal.header",
