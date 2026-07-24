@@ -706,8 +706,12 @@ PRODUCT_COPY_FILES += \
 
 # Vibrator
 ifneq ($(TARGET_IS_TABLET),true)
+ifneq ($(TARGET_USES_OPLUS_VIBRATOR_BLOBS),true)
 PRODUCT_PACKAGES += \
-    vendor.qti.hardware.vibrator.service.oplus_sm8750 \
+    vendor.qti.hardware.vibrator.service.oplus_sm8750
+endif
+
+PRODUCT_PACKAGES += \
     HapticsPolicy.xml
 
 PRODUCT_COPY_FILES += \
