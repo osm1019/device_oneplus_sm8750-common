@@ -6,5 +6,8 @@
 soong_namespace {
     imports: [
         "hardware/qcom-caf/sm8750",
+        // dodge provides its own haptic-profile effect lib
+        // (libqtivibratoreffect.oplus.dodge), selected via qti_vibrator/effect_lib.
+        "device/oneplus/dodge",
     ],
 }
