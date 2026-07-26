@@ -13,13 +13,17 @@ cc_library_shared {
         "libcutils",
         "libutils",
         "liblog",
-        "libqtivibratoreffect.oplus_sm8750",
         "libbinder_ndk",
         "android.hardware.vibrator-V2-ndk",
         "vendor.qti.hardware.vibratorOL.impl.oplus_sm8750",
         "vendor.qti.hardware.vibratorCL.impl.oplus_sm8750",
         "vendor.qti.hardware.vibratorSel.impl.oplus_sm8750",
-    ],
+    ] + select(soong_config_variable("qti_vibrator", "effect_lib"), {
+        // A device may override the effect lib (e.g. a haptic-profile-aware
+        // one) via qti_vibrator/effect_lib; default keeps the common impl.
+        any @ flag_val: [flag_val],
+        default: ["libqtivibratoreffect.oplus_sm8750"],
+    }),
     export_include_dirs: ["include"],
     include_dirs: [
         "external/expat/lib",

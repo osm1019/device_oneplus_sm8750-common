@@ -10,9 +10,11 @@ cc_library_shared {
         "libcutils",
         "libutils",
         "liblog",
-        "libqtivibratoreffect.oplus_sm8750",
         "libqtivibratoreffectoffload.oplus_sm8750",
         "libbinder_ndk",
         "android.hardware.vibrator-V2-ndk",
-    ],
+    ] + select(soong_config_variable("qti_vibrator", "effect_lib"), {
+        any @ flag_val: [flag_val],
+        default: ["libqtivibratoreffect.oplus_sm8750"],
+    }),
 }
