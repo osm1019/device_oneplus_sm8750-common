@@ -672,19 +672,10 @@ ndk::ScopedAStatus VibratorOL::perform(Effect effect, EffectStrength es, const s
     if (es != EffectStrength::LIGHT && es != EffectStrength::MEDIUM && es != EffectStrength::STRONG)
         return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_UNSUPPORTED_OPERATION));
 
-    // Map AOSP Effect IDs to ColorOS effect IDs
-    int effectId;
-    switch (effect) {
-        case Effect::CLICK:        effectId = 2;   break;  // heavy: single tap
-        case Effect::DOUBLE_CLICK: effectId = 315; break;  // screenlock: two strong pulses
-        case Effect::TICK:         effectId = 2;   break;  // heavy: back gesture, scroll feedback
-        case Effect::THUD:         effectId = 1;   break;  // heavy: strong single pulse
-        case Effect::POP:          effectId = 7;   break;  // light: short tap
-        case Effect::HEAVY_CLICK:  effectId = 6;   break;  // heavy: long press
-        default:                   effectId = static_cast<int>(effect); break;
-    }
-
-    ret = ff.playEffect(effectId, es, &playLengthMs);
+    // YAAP/infiniti-style: pass AOSP Effect IDs (0-5) straight through to
+    // get_effect_stream(). Profile tables are keyed that way; do not remap to
+    // ColorOS bin IDs (2/315/6/7) here.
+    ret = ff.playEffect(static_cast<int>(effect), es, &playLengthMs);
     if (ret != 0)
         return ndk::ScopedAStatus(AStatus_fromExceptionCode(EX_SERVICE_SPECIFIC));
 
