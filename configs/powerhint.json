@@ -102,9 +102,19 @@
       "Path": "/dev/cpuctl/foreground/cpu.uclamp.min",
       "Values": [
         "0",
+        "30",
         "50"
       ],
       "DefaultIndex": 0,
+      "ResetOnInit": true
+    },
+    {
+      "Name": "UclampFGLatency",
+      "Path": "/dev/cpuctl/foreground/cpu.uclamp.latency_sensitive",
+      "Values": [
+        "1",
+        "0"
+      ],
       "ResetOnInit": true
     },
     {
@@ -279,6 +289,18 @@
       "Node": "UclampTAMin",
       "Duration": 0,
       "Value": "30"
+    },
+    {
+      "PowerHint": "INTERACTION",
+      "Node": "UclampFGMin",
+      "Duration": 0,
+      "Value": "30"
+    },
+    {
+      "PowerHint": "INTERACTION",
+      "Node": "UclampFGLatency",
+      "Duration": 0,
+      "Value": "1"
     },
     {
       "PowerHint": "INTERACTION",
